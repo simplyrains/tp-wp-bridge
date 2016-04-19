@@ -104,6 +104,9 @@ class Tp_Bridge_Public {
 
   // Script
   public function wp_tp_redirect() {
+  	if(isset($_GET['force_wp']) && $_GET['force_wp']){
+  		return;
+  	}
     if($this->wp_tp_options['tp_te_url'] && $this->wp_tp_options['tp_enabled'] ){
     	$tp_reference = get_post_meta(get_the_ID(), 'tp_reference', true);
     	if(wp_is_mobile()){

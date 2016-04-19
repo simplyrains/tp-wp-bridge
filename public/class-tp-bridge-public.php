@@ -107,8 +107,18 @@ class Tp_Bridge_Public {
     if($this->wp_tp_options['tp_te_url'] && $this->wp_tp_options['tp_enabled'] ){
     	$tp_reference = get_post_meta(get_the_ID(), 'tp_reference', true);
     	if(wp_is_mobile()){
-        wp_redirect( $this->wp_tp_options['tp_te_url'].'/post/'.$tp_reference );
-        exit();
+
+    		// Redirect Post
+	 			if(is_single() && isset($tp_reference)){
+	        wp_redirect( $this->wp_tp_options['tp_te_url'].'/post/'.$tp_reference );
+	        exit();
+	    	}	
+
+	    	// Redirect Achieve/ Home Page
+	    	else if($this->wp_tp_options['tp_redirect_feed']){
+	        wp_redirect( $this->wp_tp_options['tp_te_url'] );
+	        exit();
+	    	}
     	}
     }
   }   

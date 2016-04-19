@@ -155,6 +155,7 @@ class Tp_Bridge_Admin {
     // All checkboxes inputs        
     $valid = array();
     //Cleanup
+    $valid['tp_redirect_feed'] = (isset($input['tp_redirect_feed']) && !empty($input['tp_redirect_feed'])) ? 1: 0;
     $valid['tp_enabled'] = (isset($input['tp_enabled']) && !empty($input['tp_enabled'])) ? 1: 0;
     $valid['tp_te_url'] = esc_url($input['tp_te_url']);
     

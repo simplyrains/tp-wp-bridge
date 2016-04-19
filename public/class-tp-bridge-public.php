@@ -115,7 +115,7 @@ class Tp_Bridge_Public {
 	    	}	
 
 	    	// Redirect Achieve/ Home Page
-	    	else if($this->wp_tp_options['tp_redirect_feed']){
+	    	else if(is_front_page() && $this->wp_tp_options['tp_redirect_feed']){
 	        wp_redirect( $this->wp_tp_options['tp_te_url'] );
 	        exit();
 	    	}

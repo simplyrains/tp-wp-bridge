@@ -51,6 +51,7 @@ class Tp_Bridge_Public {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+    $this->wp_tp_options = get_option($this->plugin_name);
 
 	}
 
@@ -97,6 +98,59 @@ class Tp_Bridge_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/tp-bridge-public.js', array( 'jquery' ), $this->version, false );
+
+	}
+
+
+  // Script
+  public function wp_tp_redirect() {
+    if($this->wp_tp_options['tp_te_url'] && $this->wp_tp_options['tp_enabled'] ){
+    	$tp_reference = get_post_meta(get_the_ID(), 'tp_reference', true);
+    	if(wp_is_mobile()){
+        wp_redirect( $this->wp_tp_options['tp_te_url'].'/post/'.$tp_reference );
+        exit();
+    	}
+    }
+  }   
+
+	public function cd_meta_box_add()
+	{
+    add_meta_box( 'tp-tp_reference', 'Touchedition Articles ID', 'cd_meta_box_cb', 'post', 'advanced', 'low' );
+    function cd_meta_box_cb($post) {
+			$values = get_post_custom( $post->ID );
+			$text = isset( $values['tp_reference'] ) ? esc_attr( $values['tp_reference'][0] ) : "";
+
+	    wp_nonce_field( 'my_meta_box_nonce', 'meta_box_nonce' );
+	    echo '<label for="tp_reference">Text Label</label>';
+	    echo '<input type="text" name="tp_reference" id="tp_reference" value="'.$text.'"/>';
+		}
+	}
+
+	public function cd_meta_box_save( $post_id )
+	{
+		if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE){
+			return;
+		}
+
+		if(!isset($_POST['meta_box_nonce']) || !wp_verify_nonce($_POST['meta_box_nonce'], 'my_meta_box_nonce')){
+			return;
+		}
+
+		if(!current_user_can('edit_posts')){
+			return;
+		}
+
+    // now we can actually save the data
+    $allowed = array( 
+        'a' => array( // on allow a tags
+            'href' => array() // and those anchors can only have href attribute
+        )
+    );
+     
+    // Make sure your data is set before trying to save it
+    if( isset( $_POST['tp_reference'] ) )
+        update_post_meta( $post_id, 'tp_reference', wp_kses( $_POST['tp_reference'], $allowed ) );
+         
 
 	}
 

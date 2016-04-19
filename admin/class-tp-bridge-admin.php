@@ -155,12 +155,8 @@ class Tp_Bridge_Admin {
     // All checkboxes inputs        
     $valid = array();
     //Cleanup
-    $valid['cleanup'] = (isset($input['cleanup']) && !empty($input['cleanup'])) ? 1 : 0;
-    $valid['comments_css_cleanup'] = (isset($input['comments_css_cleanup']) && !empty($input['comments_css_cleanup'])) ? 1: 0;
-    $valid['gallery_css_cleanup'] = (isset($input['gallery_css_cleanup']) && !empty($input['gallery_css_cleanup'])) ? 1 : 0;
-    $valid['body_class_slug'] = (isset($input['body_class_slug']) && !empty($input['body_class_slug'])) ? 1 : 0;
-    $valid['jquery_cdn'] = (isset($input['jquery_cdn']) && !empty($input['jquery_cdn'])) ? 1 : 0;
-    $valid['cdn_provider'] = esc_url($input['cdn_provider']);
+    $valid['tp_enabled'] = (isset($input['tp_enabled']) && !empty($input['tp_enabled'])) ? 1: 0;
+    $valid['tp_te_url'] = esc_url($input['tp_te_url']);
     
     return $valid;
  }

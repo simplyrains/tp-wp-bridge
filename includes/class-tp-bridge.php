@@ -164,9 +164,13 @@ class Tp_Bridge {
 		// Save/Update our plugin options
 		$this->loader->add_action('admin_init', $plugin_admin, 'options_update');
 
+		// Show tp_reference field in admin page
 		$this->loader->add_filter('manage_posts_columns', $plugin_admin, 'add_tp_reference_head');
 		$this->loader->add_action( 'manage_posts_custom_column', $plugin_admin, 'add_tp_reference_body', 10, 2 );
-
+ 
+ 		// add ajax backend function to admin-ajax
+		$this->loader->add_action('wp_ajax_send_tp_data', $plugin_admin, 'send_tp_data');
+		$this->loader->add_action( 'admin_footer', $plugin_admin, 'send_tp_data_javascript' ); // Write our JS below here
 	}
 
 	/**

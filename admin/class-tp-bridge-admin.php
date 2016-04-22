@@ -178,6 +178,32 @@ class Tp_Bridge_Admin {
 	    }
 	}
 
+	public function send_tp_data(){
+		global $wpdb; // this is how you get access to the database
+		$whatever = intval( $_POST['whatever'] );
+		$whatever += 10;
+    echo $whatever;
+		wp_die(); // this is required to terminate immediately and return a proper response
+	}
+
+	public function send_tp_data_javascript() { ?>
+		<script type="text/javascript" >
+		console.log('x');
+		jQuery(document).ready(function($) {
+
+			var data = {
+				'action': 'send_tp_data',
+				'whatever': 1234
+			};
+
+			// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
+			jQuery.post('<?php echo admin_url( 'admin-ajax.php' ); ?>', data, function(response) {
+				console.log(response);
+				alert('Got this from the server: ' + response);
+			});
+		});
+		</script> <?php
+	}
 
 
 }

@@ -162,5 +162,22 @@ class Tp_Bridge_Admin {
     return $valid;
  }
 
+	// ADD NEW COLUMN
+	public function add_tp_reference_head($defaults) {
+	    $defaults['tp_reference'] = 'TP Status';
+	    return $defaults;
+	}
+	 
+	// SHOW THE FEATURED IMAGE
+	public function add_tp_reference_body($column_name, $post_ID) {
+	    if ($column_name == 'tp_reference') {
+	    	$tp_reference = get_post_meta($post_ID, 'tp_reference', true);
+        if ($tp_reference) {
+            echo '<b>' . $tp_reference . '</b>';
+        }
+	    }
+	}
+
+
 
 }

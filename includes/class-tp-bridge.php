@@ -164,6 +164,9 @@ class Tp_Bridge {
 		// Save/Update our plugin options
 		$this->loader->add_action('admin_init', $plugin_admin, 'options_update');
 
+		$this->loader->add_filter('manage_posts_columns', $plugin_admin, 'add_tp_reference_head');
+		$this->loader->add_action( 'manage_posts_custom_column', $plugin_admin, 'add_tp_reference_body', 10, 2 );
+
 	}
 
 	/**

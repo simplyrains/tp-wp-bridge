@@ -180,10 +180,83 @@ class Tp_Bridge_Admin {
 
 	public function send_tp_data(){
 		global $wpdb; // this is how you get access to the database
-		$whatever = intval( $_POST['whatever'] );
-		$whatever += 10;
-    echo $whatever;
-		wp_die(); // this is required to terminate immediately and return a proper response
+		$postid_to_send = intval( $_POST['id'] );
+
+		// get latest single post
+		if(isset($postid_to_send)){
+			query_posts(array(
+				'p' => intval($postid_to_send)
+			));
+
+		}else{
+			query_posts(array(
+				'posts_per_page' => 20,
+			));
+		}
+		$jsonpost = array();
+
+		// loop
+		if( have_posts() ):
+		  while( have_posts() ): the_post();
+				$thispost = array();
+				// construct our array for json
+				// apply_filters to content to process shortcodes, etc
+				$thispost["id"] = get_the_ID();
+				$thispost["title"] = get_the_title();
+				$thispost["excerpt"] = get_the_excerpt();
+				$thispost["permalink"] = apply_filters('the_permalink', get_permalink());
+				$thispost["content"] = apply_filters('the_content', get_the_content());
+				// TODO: use this
+				// $thispost["tags"] = get_tags();
+				$thispost["categories"] = get_the_category();
+				$thispost["author"] = get_the_author();
+				$thispost["type"] = get_post_type();
+				$thispost["status"] = get_post_status();
+				// would rather do iso 8601, but not supported in gwt (yet)
+				$thispost["date"] = get_the_time("Y-m-d");
+				if(has_post_thumbnail()){
+					$tn_id = get_post_thumbnail_id();
+					$img = wp_get_attachment_image_src( $tn_id, 'full' );
+					$thispost["thumbnail"] = $img;
+				}
+				array_push($jsonpost, $thispost);
+		     //The loop
+		  endwhile;
+		endif;
+
+		// TODO: update this
+		$url = 'http://localhost:8000/api/tp/wordpress';
+
+		$args = array(
+			'headers' => array(
+				'Content-Type' => 'application/json',
+				// TODO: update this
+				'TE-site-id' => '568b3aac62a32e860ab2a269'
+			),
+			'body' => json_encode( $jsonpost )
+		);
+
+		$response = wp_remote_post( esc_url_raw($url), $args );
+
+	  $response_code = wp_remote_retrieve_response_code( $response );
+	  $response_body = wp_remote_retrieve_body( $response );
+	  $response_json = json_decode($response_body);
+
+    // wp_kses: escape dangerous string (security purpose)
+    $allowed = array( 
+        'a' => array( // on allow a tags
+            'href' => array() // and those anchors can only have href attribute
+        )
+    );
+
+	  // modify post mentioned in $response json by adding tp_reference field to it
+		foreach ($response_json as $tp_response) {
+			if($tp_response->success){
+				update_post_meta( intval($tp_response->id), 'tp_reference', wp_kses( $tp_response->tp_reference, $allowed ) );
+			}
+		}
+
+		wp_send_json($response_json);
 	}
 
 	public function send_tp_data_javascript() { ?>
@@ -193,17 +266,17 @@ class Tp_Bridge_Admin {
 
 			var data = {
 				'action': 'send_tp_data',
-				'whatever': 1234
+				// 'id': 10
 			};
 
 			// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 			jQuery.post('<?php echo admin_url( 'admin-ajax.php' ); ?>', data, function(response) {
+
 				console.log(response);
-				alert('Got this from the server: ' + response);
+				alert('Got response from server');
 			});
 		});
 		</script> <?php
 	}
-
 
 }

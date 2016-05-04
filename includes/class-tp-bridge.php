@@ -167,10 +167,27 @@ class Tp_Bridge {
 		// Show tp_reference field in admin page
 		$this->loader->add_filter('manage_posts_columns', $plugin_admin, 'add_tp_reference_head');
 		$this->loader->add_action( 'manage_posts_custom_column', $plugin_admin, 'add_tp_reference_body', 10, 2 );
- 
+
+ 		// Show tp_reference field in admin page
+		$this->loader->add_action( 'admin_footer-edit.php', $plugin_admin, 'add_bulk_action_update_tp');
+		$this->loader->add_action( 'admin_action_update_tp', $plugin_admin, 'process_bulk_action_update_tp');
+
  		// add ajax backend function to admin-ajax
 		$this->loader->add_action('wp_ajax_send_tp_data', $plugin_admin, 'send_tp_data');
 		$this->loader->add_action( 'admin_footer', $plugin_admin, 'send_tp_data_javascript' ); // Write our JS below here
+
+		// callback when edit/trash post
+		$this->loader->add_action( 'post_updated', $plugin_admin, 'post_updated_cb' );
+		// callback when trash post
+		$this->loader->add_action( 'trashed_post', $plugin_admin, 'trashed_post_cb' );
+
+		// create category
+		$this->loader->add_action( 'create_category', $plugin_admin, 'create_category_cb', 10, 1 );
+		// delete category
+		$this->loader->add_action( 'delete_category', $plugin_admin, 'delete_category_cb', 10, 1 );
+		// edit category
+		$this->loader->add_action( 'edit_category', $plugin_admin, 'edit_category_cb', 10, 1 );
+
 	}
 
 	/**

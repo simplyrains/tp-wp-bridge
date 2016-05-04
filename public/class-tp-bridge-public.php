@@ -128,14 +128,14 @@ class Tp_Bridge_Public {
 
 	public function cd_meta_box_add()
 	{
-    add_meta_box( 'tp-tp_reference', 'Touchedition Articles ID', 'cd_meta_box_cb', 'post', 'advanced', 'low' );
+    add_meta_box( 'tp-tp_reference', 'Touchedition Articles ID', 'cd_meta_box_cb', 'post', 'side', 'low' );
     function cd_meta_box_cb($post) {
 			$values = get_post_custom( $post->ID );
 			$text = isset( $values['tp_reference'] ) ? esc_attr( $values['tp_reference'][0] ) : "";
 
 	    wp_nonce_field( 'my_meta_box_nonce', 'meta_box_nonce' );
-	    echo '<label for="tp_reference">Text Label</label>';
-	    echo '<input type="text" name="tp_reference" id="tp_reference" value="'.$text.'"/>';
+	    echo '<label for="tp_reference">Reference ID: </label>';
+	    echo '<input type="text" name="tp_reference" id="tp_reference" value="'.$text.'" disabled/>';
 		}
 	}
 

@@ -108,7 +108,29 @@ class Tp_Bridge_Admin {
     //Cleanup
     $valid['tp_redirect_feed'] = (isset($input['tp_redirect_feed']) && !empty($input['tp_redirect_feed'])) ? 1: 0;
     $valid['tp_enabled'] = (isset($input['tp_enabled']) && !empty($input['tp_enabled'])) ? 1: 0;
-    $valid['tp_site_key'] = isset($input['tp_site_key']);
+    $valid['tp_site_private_key'] = isset($input['tp_site_private_key']) ? $input['tp_site_private_key'] : '';
+
+    //make a request to Touchedition, confirm the key, and get the tp_te_url
+		$url = 'http://localhost:8000/api/tp/wordpress/init';
+		$response = $this->send_request_to_tp($url, 'POST', array(), $valid['tp_site_private_key']);
+	  $response_body = wp_remote_retrieve_body( $response );
+	  $response_code = wp_remote_retrieve_response_code( $response );
+	  $response_json = json_decode($response_body);
+	  if($response_code == 200 && property_exists($response_json, 'domainPath')){
+		  $te_url = $response_json->domainPath;
+      $valid['tp_te_url'] = $te_url;
+	  	$valid['init_success'] = true;
+	  	$valid['tp_enabled'] = 1;
+
+	  }else{
+	  	// TE Request returns with an error
+	  	// Disable all settings
+	  	$valid['tp_redirect_feed'] = 0;
+	  	$valid['tp_enabled'] = 0;
+	  	$valid['tp_site_private_key'] = '';
+	  	$valid['tp_te_url'] = '';
+	  	$valid['init_success'] = false;
+	  }
     return $valid;
  }
 
@@ -144,21 +166,23 @@ class Tp_Bridge_Admin {
 	public function process_bulk_action_update_tp() 
 	{
     # Array with the selected Post IDs
-    // wp_die( '<pre>' . print_r( $_REQUEST['post'], true ) . '</pre>' ); 
+    wp_die( '<pre>' . print_r( $_REQUEST['post'], true ) . '</pre>' ); 
 	}
 
 // PART D: Syncing with Touchedition
 
 	// helper function to add te-site-id and authentication
-	public function send_request_to_tp($url, $method = 'POST', $body){
-    $options = get_option($this->plugin_name);
-    $tp_site_key = $options['tp_site_key'];
+	public function send_request_to_tp($url, $method = 'POST', $body, $tp_site_private_key){
+    if(!isset($tp_site_private_key)){
+    	$options = get_option($this->plugin_name);
+	    $tp_site_private_key = $options['tp_site_private_key'];
+    }
 
 		$args = array(
 			'headers' => array(
 				'Content-Type' => 'application/json',
 				// TODO: update this
-				'te-site-key' => $tp_site_key
+				'te-site-key' => $tp_site_private_key
 			),
 			'body' => json_encode( $body ),
 			 'method' => $method,

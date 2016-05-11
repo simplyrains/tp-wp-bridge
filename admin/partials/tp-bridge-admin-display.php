@@ -23,18 +23,27 @@
     //Grab all options
     $options = get_option($this->plugin_name);
 
-    $tp_enabled = isset($_POST['value']) ? $options['tp_enabled']:false;
+    $tp_enabled = isset($options['tp_enabled'])  ? $options['tp_enabled']:false;
     $tp_redirect_feed = isset($options['tp_redirect_feed']) ? $options['tp_redirect_feed']:false;
     $tp_te_url = isset($options['tp_te_url']) ? $options['tp_te_url']:''; // not used at the moment
-    $tp_site_key = isset($options['tp_site_key']) ? $options['tp_site_key']:'';
-
+    $tp_site_private_key = isset($options['tp_site_private_key']) ? $options['tp_site_private_key']:'';
     settings_fields($this->plugin_name);
     do_settings_sections($this->plugin_name);
+
 ?>
+    <fieldset>
+        <p>Touchedition Site Key: </p>
+        <input type="text" class="regular-text" id="<?php echo $this->plugin_name; ?>-tp_site_private_key" name="<?php echo $this->plugin_name; ?>[tp_site_private_key]" value="<?php if(!empty($tp_site_private_key)) echo $tp_site_private_key; ?>"/>
+    </fieldset>
 
 <?php
-    if(isset($tp_te_url)){ 
+    if(isset($tp_te_url) && $tp_te_url!= ''){ 
 ?>
+    <fieldset>
+        <p>Touchedition Site: </p>
+        <input type="url" class="regular-text" id="<?php echo $this->plugin_name; ?>-tp_te_url" disabled value="<?php if(!empty($tp_te_url)) echo $tp_te_url; ?>"/>
+    </fieldset>
+
     <fieldset style="margin-top: 20px">
         <legend class="screen-reader-text"><span><?php _e('Enable TP Bridge', $this->plugin_name); ?></span></legend>
         <label for="<?php echo $this->plugin_name; ?>-tp_enabled">
@@ -50,21 +59,10 @@
             <span><?php esc_attr_e('Enable TP Redirect for front page', $this->plugin_name); ?></span>
         </label>
     </fieldset>
-
-    <fieldset>
-        <p>Touchedition Site: </p>
-        <input type="url" class="regular-text" id="<?php echo $this->plugin_name; ?>-tp_te_url" disabled value="<?php if(!empty($tp_te_url)) echo $tp_te_url; ?>"/>
-    </fieldset>
 <?php
         submit_button('Update Settings', 'primary','submit', TRUE);
     } 
     else{
-?>
-    <fieldset>
-        <p>Touchedition Site Key: </p>
-        <input type="text" class="regular-text" id="<?php echo $this->plugin_name; ?>-tp_site_key" name="<?php echo $this->plugin_name; ?>[tp_site_key]" value="<?php if(!empty($tp_site_key)) echo $tp_site_key; ?>"/>
-    </fieldset>
-<?php 
         submit_button('Link with Touchedtion', 'primary','submit', TRUE);
     }
 ?>

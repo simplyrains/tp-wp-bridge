@@ -113,13 +113,13 @@ class Tp_Bridge_Public {
 
     		// Redirect Post
 	 			if(is_single() && isset($tp_reference)){
-	        wp_redirect( $this->wp_tp_options['tp_te_url'].'/post/'.$tp_reference );
+	        wp_redirect( 'http://'.$this->wp_tp_options['tp_te_url'].'/post/'.$tp_reference );
 	        exit();
 	    	}	
 
 	    	// Redirect Achieve/ Home Page
 	    	else if(is_front_page() && $this->wp_tp_options['tp_redirect_feed']){
-	        wp_redirect( $this->wp_tp_options['tp_te_url'] );
+	        wp_redirect( 'http://'.$this->wp_tp_options['tp_te_url'] );
 	        exit();
 	    	}
     	}

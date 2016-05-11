@@ -111,7 +111,7 @@ class Tp_Bridge_Admin {
     $valid['tp_site_private_key'] = isset($input['tp_site_private_key']) ? $input['tp_site_private_key'] : '';
 
     //make a request to Touchedition, confirm the key, and get the tp_te_url
-		$url = 'http://localhost:8000/api/tp/wordpress/init';
+		$url = 'http://nextcover.co/api/tp/wordpress/init';
 		$response = $this->send_request_to_tp($url, 'POST', array(), $valid['tp_site_private_key']);
 	  $response_body = wp_remote_retrieve_body( $response );
 	  $response_code = wp_remote_retrieve_response_code( $response );
@@ -237,8 +237,8 @@ class Tp_Bridge_Admin {
 		$jsonpost = array();
 
 		// TODO: update this
-		$url = 'http://localhost:8000/api/tp/wordpress/posts/sync';
-		$url = 'http://localhost:8000/api/tp/logger';
+		$url = 'http://nextcover.co/api/tp/wordpress/posts/sync';
+		$url = 'http://nextcover.co/api/tp/logger';
 
 		// loop
 		if( have_posts() ):
@@ -298,26 +298,26 @@ class Tp_Bridge_Admin {
 	}
 
 	public function trashed_post_cb($post_id){
-		$url = 'http://localhost:8000/api/tp/wordpress/posts/'.$post_id;
-		$url = 'http://localhost:8000/api/tp/logger';
+		$url = 'http://nextcover.co/api/tp/wordpress/posts/'.$post_id;
+		$url = 'http://nextcover.co/api/tp/logger';
 		$response = $this->send_request_to_tp($url, 'DELETE');
 	}
 
 	public function create_category_cb($category_id){
-		$url = 'http://localhost:8000/api/tp/wordpress/categories/';
-		$url = 'http://localhost:8000/api/tp/logger';
+		$url = 'http://nextcover.co/api/tp/wordpress/categories/';
+		$url = 'http://nextcover.co/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "POST", get_category($category_id));
 	}
 
 	public function delete_category_cb($category_id){
-		$url = 'http://localhost:8000/api/tp/wordpress/categories/'.$category_id;
-		$url = 'http://localhost:8000/api/tp/logger';
+		$url = 'http://nextcover.co/api/tp/wordpress/categories/'.$category_id;
+		$url = 'http://nextcover.co/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "DELETE");
 	}
 
 	public function edit_category_cb($category_id){
-		$url = 'http://localhost:8000/api/tp/wordpress/categories/'.$category_id;
-		$url = 'http://localhost:8000/api/tp/logger';
+		$url = 'http://nextcover.co/api/tp/wordpress/categories/'.$category_id;
+		$url = 'http://nextcover.co/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "PUT", get_category($category_id));
 	}
 }

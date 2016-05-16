@@ -29,7 +29,9 @@
     $tp_site_private_key = isset($options['tp_site_private_key']) ? $options['tp_site_private_key']:'';
     settings_fields($this->plugin_name);
     do_settings_sections($this->plugin_name);
-
+    if(isset($options['local'])&& $options['local']){
+        var_dump($options);
+    }
 ?>
     <fieldset>
         <p>Touchedition Site Key: </p>

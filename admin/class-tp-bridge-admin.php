@@ -35,8 +35,14 @@ class Tp_Bridge_Admin {
 	 * @since    1.0.0
 	 * @access   private
 	 * @var      string    $version    The current version of this plugin.
+	 */	/**
+	 * The api_domain of this plugin. (localhost:8001 or touchedition.com)
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $api_domain    The current api_domain of this plugin.
 	 */
-	private $version;
+	private $api_domain;
 	/**
 	 * Initialize the class and set its properties.
 	 *
@@ -47,6 +53,12 @@ class Tp_Bridge_Admin {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+  	$options = get_option($this->plugin_name);
+  	if(isset($options['local']) && $options['local']){
+			$this->api_domain = $this->api_domain . '';
+  	}else{
+  		$this->api_domain = 'http://www.touchedition.com';	
+  	}
 	}
 
 // PART A: Basic Settings
@@ -111,7 +123,7 @@ class Tp_Bridge_Admin {
     $valid['tp_site_private_key'] = isset($input['tp_site_private_key']) ? $input['tp_site_private_key'] : '';
 
     //make a request to Touchedition, confirm the key, and get the tp_te_url
-		$url = 'http://nextcover.co/api/tp/wordpress/init';
+		$url = $this->api_domain . '/api/tp/wordpress/init';
 		$response = $this->send_request_to_tp($url, 'POST', array(), $valid['tp_site_private_key']);
 	  $response_body = wp_remote_retrieve_body( $response );
 	  $response_code = wp_remote_retrieve_response_code( $response );
@@ -166,6 +178,7 @@ class Tp_Bridge_Admin {
 	public function process_bulk_action_update_tp() 
 	{
     # Array with the selected Post IDs
+    // todo: implement this and send data
     wp_die( '<pre>' . print_r( $_REQUEST['post'], true ) . '</pre>' ); 
 	}
 
@@ -237,8 +250,8 @@ class Tp_Bridge_Admin {
 		$jsonpost = array();
 
 		// TODO: update this
-		$url = 'http://nextcover.co/api/tp/wordpress/posts/sync';
-		$url = 'http://nextcover.co/api/tp/logger';
+		$url = $this->api_domain . '/api/tp/wordpress/post/sync';
+		$url = $this->api_domain . '/api/tp/logger';
 
 		// loop
 		if( have_posts() ):
@@ -298,26 +311,26 @@ class Tp_Bridge_Admin {
 	}
 
 	public function trashed_post_cb($post_id){
-		$url = 'http://nextcover.co/api/tp/wordpress/posts/'.$post_id;
-		$url = 'http://nextcover.co/api/tp/logger';
+		$url = $this->api_domain . '/api/tp/wordpress/post/'.$post_id;
+		$url = $this->api_domain . '/api/tp/logger';
 		$response = $this->send_request_to_tp($url, 'DELETE');
 	}
 
 	public function create_category_cb($category_id){
-		$url = 'http://nextcover.co/api/tp/wordpress/categories/';
-		$url = 'http://nextcover.co/api/tp/logger';
+		$url = $this->api_domain . '/api/tp/wordpress/category/';
+		$url = $this->api_domain . '/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "POST", get_category($category_id));
 	}
 
 	public function delete_category_cb($category_id){
-		$url = 'http://nextcover.co/api/tp/wordpress/categories/'.$category_id;
-		$url = 'http://nextcover.co/api/tp/logger';
+		$url = $this->api_domain . '/api/tp/wordpress/category/'.$category_id;
+		$url = $this->api_domain . '/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "DELETE");
 	}
 
 	public function edit_category_cb($category_id){
-		$url = 'http://nextcover.co/api/tp/wordpress/categories/'.$category_id;
-		$url = 'http://nextcover.co/api/tp/logger';
+		$url = $this->api_domain . '/api/tp/wordpress/category/'.$category_id;
+		$url = $this->api_domain . '/api/tp/logger';
 		$response = $this->send_request_to_tp($url, "PUT", get_category($category_id));
 	}
 }

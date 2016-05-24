@@ -55,11 +55,18 @@ class Tp_Bridge_Admin {
 		$this->version = $version;
   	$options = get_option($this->plugin_name);
   	if(isset($options['local']) && $options['local']){
-			$this->api_domain = $this->api_domain . '';
+			$this->api_domain = 'http://localhost:8001';
   	}else{
   		$this->api_domain = 'http://www.touchedition.com';	
   	}
 	}
+
+// PART X: Constants
+	const TP_INIT_SITE = 'TP_INIT_SITE';
+	const TP_SYNC_POSTS = 'TP_SYNC_POSTS';
+	const TP_DELETE_POSTS = 'TP_DELETE_POSTS';
+	const TP_SYNC_CATEGORIES = 'TP_SYNC_CATEGORIES';
+	const TP_DELETE_CATEGORIES = 'TP_DELETE_CATEGORIES';
 
 // PART A: Basic Settings
 	/**
@@ -116,33 +123,38 @@ class Tp_Bridge_Admin {
 	// Validate Settings
 	public function validate($input) {
     // All checkboxes inputs        
-    $valid = array();
+  	$options = get_option($this->plugin_name);
+    $valid = $options;
     //Cleanup
     $valid['tp_redirect_feed'] = (isset($input['tp_redirect_feed']) && !empty($input['tp_redirect_feed'])) ? 1: 0;
     $valid['tp_enabled'] = (isset($input['tp_enabled']) && !empty($input['tp_enabled'])) ? 1: 0;
     $valid['tp_site_private_key'] = isset($input['tp_site_private_key']) ? $input['tp_site_private_key'] : '';
 
-    //make a request to Touchedition, confirm the key, and get the tp_te_url
-		$url = $this->api_domain . '/api/tp/wordpress/init';
-		$response = $this->send_request_to_tp($url, 'POST', array(), $valid['tp_site_private_key']);
-	  $response_body = wp_remote_retrieve_body( $response );
-	  $response_code = wp_remote_retrieve_response_code( $response );
-	  $response_json = json_decode($response_body);
-	  if($response_code == 200 && property_exists($response_json, 'domainPath')){
-		  $te_url = $response_json->domainPath;
-      $valid['tp_te_url'] = $te_url;
-	  	$valid['init_success'] = true;
-	  	$valid['tp_enabled'] = 1;
+  	$is_new_site_key = !isset($options['tp_site_private_key']) || strlen($options['tp_site_private_key'])==0 || 
+  		$options['tp_site_private_key'] != $valid['tp_site_private_key'];
 
-	  }else{
-	  	// TE Request returns with an error
-	  	// Disable all settings
-	  	$valid['tp_redirect_feed'] = 0;
-	  	$valid['tp_enabled'] = 0;
-	  	$valid['tp_site_private_key'] = '';
-	  	$valid['tp_te_url'] = '';
-	  	$valid['init_success'] = false;
-	  }
+  	if($is_new_site_key || !isset($options['init_success']) || !$options['init_success']){
+	    //make a request to Touchedition, confirm the key, and get the tp_te_url
+			$response = $this->send_request_to_tp(self::TP_INIT_SITE, array(), $valid['tp_site_private_key']);
+		  $response_body = wp_remote_retrieve_body( $response );
+		  $response_code = wp_remote_retrieve_response_code( $response );
+		  $response_json = json_decode($response_body);
+
+		  if($response_code == 200 && property_exists($response_json, 'domainPath')){
+			  $te_url = $response_json->domainPath;
+	      $valid['tp_te_url'] = $te_url;
+		  	$valid['init_success'] = true;
+		  	$valid['tp_enabled'] = 1;
+		  }else{
+		  	// TE Request returns with an error
+		  	// Disable all settings
+		  	$valid['tp_redirect_feed'] = 0;
+		  	$valid['tp_enabled'] = 0;
+		  	$valid['tp_site_private_key'] = '';
+		  	$valid['tp_te_url'] = '';
+		  	$valid['init_success'] = false;
+		  }
+  	}
     return $valid;
  }
 
@@ -179,26 +191,44 @@ class Tp_Bridge_Admin {
 	{
     # Array with the selected Post IDs
     // todo: implement this and send data
-    wp_die( '<pre>' . print_r( $_REQUEST['post'], true ) . '</pre>' ); 
+    $post_ids = $_REQUEST['post'];
+		$tp_query = array(
+			'post__in' => $post_ids,
+			'posts_per_page' => -1
+		);
+		$response_json = $this->sync_posts_with_tp($tp_query);
 	}
 
 // PART D: Syncing with Touchedition
 
 	// helper function to add te-site-id and authentication
-	public function send_request_to_tp($url, $method = 'POST', $body, $tp_site_private_key){
+	public function send_request_to_tp($type, $body, $tp_site_private_key = null){
+		$x = $tp_site_private_key;
     if(!isset($tp_site_private_key)){
     	$options = get_option($this->plugin_name);
 	    $tp_site_private_key = $options['tp_site_private_key'];
     }
+    // wp_die( '<pre>' . print_r(array($x, $tp_site_private_key), true ) . '</pre>' ); 
 
+		$method = 'POST';
+		$data = array(
+			'type' => $type,
+			'data' => $body
+		);
+		$url = $this->api_domain . '/api/tp/wordpress';
+		// $url = $this->api_domain . '/api/tp/logger';
+		if($type == self::TP_INIT_SITE){
+			$url = $this->api_domain . '/api/tp/wordpress/init';
+		}
 		$args = array(
 			'headers' => array(
 				'Content-Type' => 'application/json',
 				// TODO: update this
 				'te-site-key' => $tp_site_private_key
 			),
-			'body' => json_encode( $body ),
-			 'method' => $method,
+			'timeout' => 60,
+			'body' => json_encode( $data ),
+			'method' => $method,
 		);
 		return wp_remote_post( esc_url_raw($url), $args );
 	}
@@ -245,13 +275,11 @@ class Tp_Bridge_Admin {
 
 	// helper function to send wp posts to TP
 	// - called by sync_posts_with_tp and post_updated_cb
+	// - $post_query will be used to query with WP'squery_posts, which uses WP's query format
+	//   further reading: http://codex.wordpress.org/Class_Reference/WP_Query#Post_.26_Page_Parameters
 	public function sync_posts_with_tp($post_query = array()){
 		query_posts($post_query);
 		$jsonpost = array();
-
-		// TODO: update this
-		$url = $this->api_domain . '/api/tp/wordpress/post/sync';
-		$url = $this->api_domain . '/api/tp/logger';
 
 		// loop
 		if( have_posts() ):
@@ -263,7 +291,9 @@ class Tp_Bridge_Admin {
 				$thispost["title"] = get_the_title();
 				$thispost["excerpt"] = get_the_excerpt();
 				$thispost["permalink"] = apply_filters('the_permalink', get_permalink());
-				$thispost["content"] = apply_filters('the_content', get_the_content());
+				global $more;
+				$more = -1;
+				$thispost["content"] = apply_filters('the_content', get_the_content("", false));
 				// TODO: use this
 				// $thispost["tags"] = get_tags();
 				$thispost["categories"] = get_the_category();
@@ -281,7 +311,7 @@ class Tp_Bridge_Admin {
 		  endwhile;
 		endif;
 
-		$response = $this->send_request_to_tp($url, 'POST', $jsonpost);
+		$response = $this->send_request_to_tp(self::TP_SYNC_POSTS, $jsonpost);
 	  $response_code = wp_remote_retrieve_response_code( $response );
 	  $response_body = wp_remote_retrieve_body( $response );
 	  $response_json = json_decode($response_body);
@@ -293,9 +323,13 @@ class Tp_Bridge_Admin {
         )
     );
 	  // modify post mentioned in $response json by adding tp_reference field to it
-		foreach ($response_json as $tp_response) {
-			if($tp_response->success){
-				update_post_meta( intval($tp_response->id), 'tp_reference', wp_kses( $tp_response->tp_reference, $allowed ) );
+    // wp_die( '<pre>' . print_r($response_json, true ) . '</pre>' ); 
+
+	  if($response_code == 200){
+			foreach ($response_json as $tp_response) {
+				if(property_exists($tp_response, 'success') && $tp_response->success){
+					update_post_meta( intval($tp_response->id), 'tp_reference', wp_kses( $tp_response->tp_reference, $allowed ) );
+				}
 			}
 		}
 		return $response_json;
@@ -311,26 +345,18 @@ class Tp_Bridge_Admin {
 	}
 
 	public function trashed_post_cb($post_id){
-		$url = $this->api_domain . '/api/tp/wordpress/post/'.$post_id;
-		$url = $this->api_domain . '/api/tp/logger';
-		$response = $this->send_request_to_tp($url, 'DELETE');
+		$response = $this->send_request_to_tp(self::TP_DELETE_POSTS, array($post_id));
 	}
 
 	public function create_category_cb($category_id){
-		$url = $this->api_domain . '/api/tp/wordpress/category/';
-		$url = $this->api_domain . '/api/tp/logger';
-		$response = $this->send_request_to_tp($url, "POST", get_category($category_id));
+		$response = $this->send_request_to_tp(self::TP_SYNC_CATEGORIES, array(get_category($category_id)));
 	}
 
 	public function delete_category_cb($category_id){
-		$url = $this->api_domain . '/api/tp/wordpress/category/'.$category_id;
-		$url = $this->api_domain . '/api/tp/logger';
-		$response = $this->send_request_to_tp($url, "DELETE");
+		$response = $this->send_request_to_tp(self::TP_DELETE_CATEGORIES, array($category_id));
 	}
 
 	public function edit_category_cb($category_id){
-		$url = $this->api_domain . '/api/tp/wordpress/category/'.$category_id;
-		$url = $this->api_domain . '/api/tp/logger';
-		$response = $this->send_request_to_tp($url, "PUT", get_category($category_id));
+		$response = $this->send_request_to_tp(self::TP_SYNC_CATEGORIES, array(get_category($category_id)));
 	}
 }

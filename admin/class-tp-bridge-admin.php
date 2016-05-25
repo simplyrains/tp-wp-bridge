@@ -301,7 +301,7 @@ class Tp_Bridge_Admin {
 				$thispost["type"] = get_post_type();
 				$thispost["status"] = get_post_status();
 				// would rather do iso 8601, but not supported in gwt (yet)
-				$thispost["date"] = get_the_time("Y-m-d");
+				$thispost["date"] = get_the_time("U");
 				if(has_post_thumbnail()){
 					$tn_id = get_post_thumbnail_id();
 					$img = wp_get_attachment_image_src( $tn_id, 'full' );

@@ -135,7 +135,11 @@ class Tp_Bridge_Admin {
 
   	if($is_new_site_key || !isset($options['init_success']) || !$options['init_success']){
 	    //make a request to Touchedition, confirm the key, and get the tp_te_url
-			$response = $this->send_request_to_tp(self::TP_INIT_SITE, array(), $valid['tp_site_private_key']);
+	    $site_data = array(
+				'url' => get_site_url(),
+				'categories' => array_values(get_categories())
+			);
+			$response = $this->send_request_to_tp(self::TP_INIT_SITE, $site_data, $valid['tp_site_private_key']);
 		  $response_body = wp_remote_retrieve_body( $response );
 		  $response_code = wp_remote_retrieve_response_code( $response );
 		  $response_json = json_decode($response_body);

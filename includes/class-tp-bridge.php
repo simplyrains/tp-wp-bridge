@@ -182,11 +182,11 @@ class Tp_Bridge {
 		$this->loader->add_action( 'trashed_post', $plugin_admin, 'trashed_post_cb' );
 
 		// create category
-		$this->loader->add_action( 'create_category', $plugin_admin, 'create_category_cb', 10, 1 );
+		$this->loader->add_action( 'created_category', $plugin_admin, 'create_category_cb', 10, 1 );
 		// delete category
-		$this->loader->add_action( 'delete_category', $plugin_admin, 'delete_category_cb', 10, 1 );
+		$this->loader->add_action( 'deleted_category', $plugin_admin, 'delete_category_cb', 10, 1 );
 		// edit category
-		$this->loader->add_action( 'edit_category', $plugin_admin, 'edit_category_cb', 10, 1 );
+		$this->loader->add_action( 'edited_category', $plugin_admin, 'edit_category_cb', 10, 1 );
 
 	}
 

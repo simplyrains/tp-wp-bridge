@@ -57,7 +57,7 @@ class Tp_Bridge_Admin {
   	if(isset($options['local']) && $options['local']){
 			$this->api_domain = 'http://localhost:8001';
   	}else{
-  		$this->api_domain = 'http://www.touchedition.com';	
+  		$this->api_domain = 'http://www.docblend.com';	
   	}
 	}
 

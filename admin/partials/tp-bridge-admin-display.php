@@ -65,6 +65,6 @@
         submit_button('Update Settings', 'primary','submit', TRUE);
     } 
     else{
-        submit_button('Link with Touchedtion', 'primary','submit', TRUE);
+        submit_button('Link with Touchedition', 'primary','submit', TRUE);
     }
 ?>

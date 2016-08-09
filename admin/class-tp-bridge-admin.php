@@ -304,6 +304,7 @@ class Tp_Bridge_Admin {
 				$thispost["author"] = get_the_author();
 				$thispost["type"] = get_post_type();
 				$thispost["status"] = get_post_status();
+				$thispost["meta"] = get_post_meta();
 				// would rather do iso 8601, but not supported in gwt (yet)
 				$thispost["date"] = get_the_time("U");
 				if(has_post_thumbnail()){
